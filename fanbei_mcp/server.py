@@ -338,7 +338,10 @@ class AuthGate:
                     # 添加连接器弹窗等）：允许 URL 查询参数携带令牌 token= / access_token=。
                     # 命中后注入 Authorization 头，并把令牌从 query_string 里剥掉，
                     # 避免令牌继续留在下游日志里。
-                    pairs = parse_qsl(scope.get('query_string') or b'', keep_blank_values=True)
+                    # parse_qsl 传 bytes 会返回 bytes 键，统一解码成 str 再比对
+                    pairs = [(k.decode('latin-1'), v.decode('latin-1'))
+                             for k, v in parse_qsl(scope.get('query_string') or b'',
+                                                   keep_blank_values=True)]
                     tok = next((v for k, v in pairs if k in ('token', 'access_token') and v), None)
                     if tok:
                         auth = f'Bearer {unquote(tok)}'.encode('latin-1')
