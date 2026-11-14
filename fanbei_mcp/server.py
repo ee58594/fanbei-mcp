@@ -288,12 +288,15 @@ async def _server_card(request):                                 # noqa: ARG001
     工具列表直接从注册表生成，与实际暴露的工具永远一致。"""
     try:
         tools = await mcp.list_tools()
-        items = [{
-            'name': t.name,
-            'title': t.title or t.name,
-            'description': t.description or '',
-            'inputSchema': t.inputSchema or {'type': 'object', 'properties': {}},
-        } for t in tools]
+        items = []
+        for t in tools:
+            d = t.model_dump(by_alias=True)          # wire 格式：inputSchema 等别名键
+            items.append({
+                'name': d.get('name'),
+                'title': d.get('title') or d.get('name'),
+                'description': d.get('description') or '',
+                'inputSchema': d.get('inputSchema') or {'type': 'object', 'properties': {}},
+            })
     except Exception:
         items = []
     return JSONResponse({
