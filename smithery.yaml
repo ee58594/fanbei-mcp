@@ -1,0 +1,35 @@
+# Smithery 部署描述。
+#
+# 我们提供的是**远程托管**端点（https://trans.sunnytranslation.com/mcp），
+# 因此这里只声明运行时依赖与启动方式，供 Smithery 的 stdio 打包/自托管场景使用；
+# 在 smithery.ai/new 里直接贴远程 URL 时不需要这个文件也能收录。
+#
+# 字段参考：https://smithery.ai/docs
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - fanbeiToken
+    properties:
+      fanbeiToken:
+        type: string
+        title: 翻呗访问令牌
+        description: >-
+          在 https://trans.sunnytranslation.com 用账号密码换取（POST /trans/api/token），
+          以 fb1. 开头，默认 30 天有效；改密码会让旧令牌立即失效。
+      fanbeiBase:
+        type: string
+        title: 服务地址
+        description: 默认 https://trans.sunnytranslation.com，仅在私有化部署时修改。
+        default: https://trans.sunnytranslation.com
+  commandFunction: |
+    (config) => ({
+      command: 'fanbei-mcp',
+      args: [],
+      env: {
+        FANBEI_TOKEN: config.fanbeiToken,
+        FANBEI_BASE: config.fanbeiBase || 'https://trans.sunnytranslation.com'
+      }
+    })
