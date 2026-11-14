@@ -24,7 +24,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://trans.sunnytranslation.com"
 Documentation = "https://trans.sunnytranslation.com/articles"
-Source = "https://github.com/sunnytranslation/fanbei-mcp"
+Source = "https://github.com/ee58594/fanbei-mcp"
 
 [project.scripts]
 fanbei-mcp = "fanbei_mcp.server:main"
