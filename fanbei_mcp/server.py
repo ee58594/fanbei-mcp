@@ -23,6 +23,7 @@ import argparse
 import base64
 import os
 import time
+from urllib.parse import unquote, urlsplit, parse_qsl, urlencode
 
 from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import ToolAnnotations
@@ -331,7 +332,23 @@ class AuthGate:
             method = scope.get('method') or 'GET'
             if (path == self.path or path.startswith(self.path + '/')) and method != 'OPTIONS':
                 headers = {k.lower(): v for k, v in scope.get('headers') or []}
-                if not headers.get(b'authorization'):
+                auth = headers.get(b'authorization')
+                if not auth:
+                    # 兼容不支持自定义请求头的客户端（部分国内客户端、claude.ai 的
+                    # 添加连接器弹窗等）：允许 URL 查询参数携带令牌 token= / access_token=。
+                    # 命中后注入 Authorization 头，并把令牌从 query_string 里剥掉，
+                    # 避免令牌继续留在下游日志里。
+                    pairs = parse_qsl(scope.get('query_string') or b'', keep_blank_values=True)
+                    tok = next((v for k, v in pairs if k in ('token', 'access_token') and v), None)
+                    if tok:
+                        auth = f'Bearer {unquote(tok)}'.encode('latin-1')
+                        kept = [(k, v) for k, v in pairs if k not in ('token', 'access_token')]
+                        scope = dict(scope)
+                        scope['query_string'] = urlencode(kept).encode('latin-1')
+                        headers = dict(headers)
+                        headers[b'authorization'] = auth
+                        scope['headers'] = list(headers.items())
+                if not auth:
                     body = (b'{"error":"missing_token","message":'
                             b'"Authorization: Bearer <token> required. '
                             b'Get one at POST /trans/api/token"}')
