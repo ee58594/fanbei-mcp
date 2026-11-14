@@ -51,11 +51,17 @@ curl -X POST https://trans.sunnytranslation.com/trans/api/token \
   "mcpServers": {
     "fanbei": {
       "type": "http",
-      "url": "https://mcp.sunnytranslation.com/mcp",
+      "url": "https://trans.sunnytranslation.com/mcp",
       "headers": { "Authorization": "Bearer fb1.xxxxx" }
     }
   }
 }
+```
+
+客户端不支持自定义请求头时，也可以把令牌放在 URL 查询参数里（服务端会自动转成鉴权头，且不会把令牌继续往下游传）：
+
+```
+https://trans.sunnytranslation.com/mcp?token=fb1.xxxxx
 ```
 
 自托管：
